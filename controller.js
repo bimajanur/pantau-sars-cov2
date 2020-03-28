@@ -4,19 +4,18 @@ const response = require('./res')
 
 const firebase = require('firebase')
 // Initialize Firebase
-// const config = {
-//     apiKey: "AIzaSyCV-RJho9f_aIAZHUwO9hIGLTeKDNZQN7c",
-//     authDomain: "putrihuriati-101b5.firebaseapp.com",
-//     projectId: "putrihuriati-101b5",
-//     storageBucket: "putrihuriati-101b5.appspot.com",
-//     messagingSenderId: "642993692803",
-//     appId: "1:642993692803:web:94084229d7f20bd5",
-//     databaseURL: "https://putrihuriati-101b5.firebaseio.com",
-// }
 const config = {
-    databaseURL: "https://coronaapps-3200d.firebaseio.com/",
-    // databaseURL: "https://coronaapps-b9e75.firebaseio.com",
+    apiKey: "AIzaSyAPTveRXaamGZRhTpyUq9_JDh6M41Z-rxA",
+    authDomain: "coronaapps-b9e75.firebaseapp.com",
+    databaseURL: "https://coronaapps-b9e75.firebaseio.com",
+    projectId: "coronaapps-b9e75",
+    storageBucket: "coronaapps-b9e75.appspot.com",
+    messagingSenderId: "258467893706",
+    appId: "1:258467893706:web:2e1050258655ba7148ff33"
 }
+// const config = {
+//     databaseURL: "https://coronaapps-3200d.firebaseio.com/",
+// }
 firebase.initializeApp(config)
 
 //Get data From json
@@ -65,8 +64,8 @@ exports.peopleAround = async function (req, res) {
                 lat: tracking.Latitute,
                 lon: tracking.Longitute
             }, centerPoint: {
-                lat: -0.9408239,
-                lon: 100.4466765
+                lat: lat,
+                lon: lon
             }
         })
 

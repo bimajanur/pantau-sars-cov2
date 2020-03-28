@@ -25,16 +25,8 @@ exports.index = function (req, res) {
     response.info("Pantau COVID-19 is in the house!", res)
 }
 
-// const arePointsNear = function (checkPoint, centerPoint, km) {
-//     let ky = 40000 / 360
-//     let kx = Math.cos(Math.PI * centerPoint.lat / 180.0) * ky
-//     let dx = Math.abs(centerPoint.lon - checkPoint.lon) * kx
-//     let dy = Math.abs(centerPoint.lat - checkPoint.lat) * ky
-//     return Math.sqrt(dx * dx + dy * dy) <= km
-// }
-
 const getDistanceInKm = function ({ checkPoint, centerPoint }) {
-    let ky = 40000 / 360
+    let ky = 40000 / 360 * 1000
     let kx = Math.cos(Math.PI * centerPoint.lat / 180.0) * ky
     let dx = Math.abs(centerPoint.lon - checkPoint.lon) * kx
     let dy = Math.abs(centerPoint.lat - checkPoint.lat) * ky

@@ -1,6 +1,8 @@
 'use strict'
 
 const response = require('./res')
+const moment = require('moment-timezone')
+moment.tz.setDefault("Asia/Jakarta")
 
 const firebase = require('firebase')
 // Initialize Firebase
@@ -33,7 +35,7 @@ const getDistanceInKm = function ({ checkPoint, centerPoint }) {
 }
 
 exports.peopleAround = async function (req, res) {
-    const { lat, lon } = req.body
+    const { lat, lon, time, maxDistance, timespan } = req.body
     const db = firebase.database()
     const ref = db.ref("Tracking")
     // const ref = db.ref("Lapor")
@@ -50,13 +52,13 @@ exports.peopleAround = async function (req, res) {
 
     trackingList = JSON.parse(JSON.stringify(trackingList))
 
-    let trackingArr = [];
+    let trackingArr = []
     await Object.keys(trackingList).forEach(function (key, idx) {
         trackingList[key].key = key
         trackingArr.push(trackingList[key])
     })
 
-    console.log(trackingArr)
+    let centerTime = moment(time, "YYYY-MM-DDTHH:mm")
 
     trackingArr = trackingArr.map(tracking => {
         tracking.distance = getDistanceInKm({
@@ -69,13 +71,29 @@ exports.peopleAround = async function (req, res) {
             }
         })
 
+        let checkingTime = moment(tracking.Tanggal, "MMM DD, YYYY  hh.mm.ss a")
+        var duration = moment.duration(centerTime.diff(checkingTime))
+        var asminutes = duration.asMinutes()
+        tracking.timespan = asminutes
+
         return tracking
     })
+
+    trackingArr = trackingArr.filter(tracking => {
+        //filter by Distance
+        let byDistance = tracking.distance <= (maxDistance * 1)
+
+        //filter by Timespan
+        let byTimespan = tracking.timespan <= timespan
+
+        return byDistance && byTimespan
+    })
+
+    console.log(trackingArr)
 
     let returnRes = {
         body: req.body,
         snapshot: trackingArr,
-        names: ["Tony", "Lisa", "Michael", "Ginger", "Food"],
     }
     response.info(returnRes, res)
 

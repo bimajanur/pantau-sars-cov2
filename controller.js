@@ -98,7 +98,7 @@ exports.peopleAround = async function (req, res) {
             byTimespan = tracking.timespan <= timespan
 
         //filter by userId
-        if (timespan != null)
+        if (userId != null)
             byUserId = tracking.idUser != userId
 
         return byDistance && byTimespan && byUserId

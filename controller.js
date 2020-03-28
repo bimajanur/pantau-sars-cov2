@@ -76,7 +76,7 @@ exports.peopleAround = async function (req, res) {
         })
 
         //add timespan
-        let checkingTime = moment(tracking.Tanggal, "MMM DD, YYYY  hh.mm.ss a")
+        let checkingTime = moment(tracking.Tanggal, "MMM DD, YYYY hh.mm.ss a")
         var duration = moment.duration(centerTime.diff(checkingTime))
         var asminutes = duration.asMinutes()
         tracking.timespan = asminutes

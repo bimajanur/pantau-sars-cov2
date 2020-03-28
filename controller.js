@@ -36,10 +36,10 @@ const getDistanceInKm = function ({ checkPoint, centerPoint }) {
 
 }
 
-var groupBy = function (xs, key) {
-    return xs.reduce(function (rv, x) {
-        (rv[x[key]] = rv[x[key]] || []).push(x);
-        return rv;
+var groupBy = function (arrayObj, byKey) {
+    return arrayObj.reduce(function (total, curObj) {
+        (total[curObj[byKey]] = total[curObj[byKey]] || []).push(curObj);
+        return total;
     }, {});
 };
 
@@ -126,13 +126,57 @@ exports.peopleAround = async function (req, res) {
 }
 
 exports.isMoving = async function (req, res) {
-    const { userId } = req.body
+    const { userId, time } = req.body
+    const db = firebase.database()
+    const ref = db.ref("Tracking")
 
-    console.log(userId)
+    let trackingList = await ref.once('value',
+        snapshot => {
+            let trackingData = snapshot.val()
+            return trackingData
+        },
+        errorObject => {
+            return errorObject.code
+        }
+    )
+
+    trackingList = JSON.parse(JSON.stringify(trackingList))
+
+    let trackingArr = []
+    await Object.keys(trackingList).forEach(function (key, idx) {
+        trackingList[key].key = key
+        trackingArr.push(trackingList[key])
+    })
+
+    trackingArr = trackingArr.reverse()
+
+    trackingArr = trackingArr.filter(tracking => {
+        let byUserId = true
+
+        //filter by userId
+        if (userId != null)
+            byUserId = tracking.idUser == userId
+
+        return byUserId
+    })
+
+    let positionStatus = "static";
+    if (trackingArr[0].Latitute != trackingArr[1].Latitute ||
+        trackingArr[0].Longitute != trackingArr[1].Longitute) {
+        positionStatus = "moving";
+    }
+
+    let returnData = {
+        positionStatus: positionStatus
+    }
+
+    let centerTime = moment(time, "YYYY-MM-DDTHH:mm")
+
+    console.log(trackingArr)
 
     let returnRes = {
         body: req.body,
-        snapshot: userId,
+        snapshot: returnData,
     }
     response.info(returnRes, res)
 

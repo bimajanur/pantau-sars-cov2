@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function (app) {
-    const todoList = require('./controller');
+    const pantauAPI = require('./controller');
 
     // const firebaseAdmin = require('firebase-admin');
 
@@ -11,9 +11,12 @@ module.exports = function (app) {
     // });
 
     app.route('/')
-        .get(todoList.index);
+        .get(pantauAPI.index);
 
     app.route('/people-around-me')
-        .post(todoList.peopleAround);
+        .post(pantauAPI.peopleAround);
+
+    app.route('/is-moving')
+        .post(pantauAPI.isMoving);
 
 };

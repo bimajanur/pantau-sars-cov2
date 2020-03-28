@@ -27,15 +27,18 @@ exports.index = function (req, res) {
 }
 
 const getDistanceInKm = function ({ checkPoint, centerPoint }) {
+
     let ky = 40000 / 360 * 1000
     let kx = Math.cos(Math.PI * centerPoint.lat / 180.0) * ky
     let dx = Math.abs(centerPoint.lon - checkPoint.lon) * kx
     let dy = Math.abs(centerPoint.lat - checkPoint.lat) * ky
     return Math.sqrt(dx * dx + dy * dy)
+
 }
 
 exports.peopleAround = async function (req, res) {
-    const { lat, lon, time, maxDistance, timespan } = req.body
+
+    const { lat, lon, time, maxDistance, timespan, userId } = req.body
     const db = firebase.database()
     const ref = db.ref("Tracking")
     // const ref = db.ref("Lapor")
@@ -61,6 +64,7 @@ exports.peopleAround = async function (req, res) {
     let centerTime = moment(time, "YYYY-MM-DDTHH:mm")
 
     trackingArr = trackingArr.map(tracking => {
+        //add distance
         tracking.distance = getDistanceInKm({
             checkPoint: {
                 lat: tracking.Latitute,
@@ -71,6 +75,7 @@ exports.peopleAround = async function (req, res) {
             }
         })
 
+        //add timespan
         let checkingTime = moment(tracking.Tanggal, "MMM DD, YYYY  hh.mm.ss a")
         var duration = moment.duration(centerTime.diff(checkingTime))
         var asminutes = duration.asMinutes()
@@ -80,13 +85,23 @@ exports.peopleAround = async function (req, res) {
     })
 
     trackingArr = trackingArr.filter(tracking => {
+        let byDistance = true
+        let byTimespan = true
+        let byUserId = true
+
         //filter by Distance
-        let byDistance = tracking.distance <= (maxDistance * 1)
+        if (maxDistance != null)
+            byDistance = tracking.distance <= (maxDistance * 1)
 
         //filter by Timespan
-        let byTimespan = tracking.timespan <= timespan
+        if (timespan != null)
+            byTimespan = tracking.timespan <= timespan
 
-        return byDistance && byTimespan
+        //filter by userId
+        if (timespan != null)
+            byUserId = tracking.idUser != userId
+
+        return byDistance && byTimespan && byUserId
     })
 
     console.log(trackingArr)
@@ -94,6 +109,19 @@ exports.peopleAround = async function (req, res) {
     let returnRes = {
         body: req.body,
         snapshot: trackingArr,
+    }
+    response.info(returnRes, res)
+
+}
+
+exports.isMoving = async function (req, res) {
+    const { userId } = req.body
+
+    console.log(userId)
+
+    let returnRes = {
+        body: req.body,
+        snapshot: userId,
     }
     response.info(returnRes, res)
 

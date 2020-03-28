@@ -36,6 +36,13 @@ const getDistanceInKm = function ({ checkPoint, centerPoint }) {
 
 }
 
+var groupBy = function (xs, key) {
+    return xs.reduce(function (rv, x) {
+        (rv[x[key]] = rv[x[key]] || []).push(x);
+        return rv;
+    }, {});
+};
+
 exports.peopleAround = async function (req, res) {
 
     const { lat, lon, time, maxDistance, timespan, userId } = req.body
@@ -104,7 +111,11 @@ exports.peopleAround = async function (req, res) {
         return byDistance && byTimespan && byUserId
     })
 
-    console.log(trackingArr)
+    // console.log(groupBy(trackingArr, 'idUser'));
+
+    trackingArr = groupBy(trackingArr, 'idUser');
+
+    // console.log(trackingArr)
 
     let returnRes = {
         body: req.body,

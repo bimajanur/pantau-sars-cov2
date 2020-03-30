@@ -37,9 +37,9 @@ const getDistanceInMeter = function ({ checkPoint, centerPoint }) {
 }
 
 var groupBy = function (arrayObj, byKey) {
-    return arrayObj.reduce(function (total, curObj) {
-        (total[curObj[byKey]] = total[curObj[byKey]] || []).push(curObj)
-        return total
+    return arrayObj.reduce(function (accumulator, curObj) {
+        (accumulator[curObj[byKey]] = accumulator[curObj[byKey]] || []).push(curObj)
+        return accumulator
     }, {})
 }
 
@@ -190,7 +190,6 @@ exports.stopoverHistory = async function (req, res) {
             trackingArrPos.push(pos)
 
         } else {
-            let lastTracking = trackingArr[i - 1]
 
             let posDistance = getDistanceInMeter({
                 checkPoint: {
@@ -232,21 +231,21 @@ exports.stopoverHistory = async function (req, res) {
 
     let returnRes = {
         body: req.body,
-        snapshot: trackingArr,
+        snapshot: trackingArrPos,
     }
     response.info(returnRes, res)
 
 }
 
 var groupByA = function (arrayObj, byKey) {
-    return arrayObj.reduce(function (total, curObj) {
+    return arrayObj.reduce(function (accumulator, curObj) {
         // let a = []
-        // if (total[curObj[byKey]] != null) {
-        //     a = total[curObj[byKey]]
+        // if (accumulator[curObj[byKey]] != null) {
+        //     a = accumulator[curObj[byKey]]
         // }
         // a.push(curObj)
 
-        (total[curObj[byKey]] = total[curObj[byKey]] || []).push(curObj)
-        return total
+        (accumulator[curObj[byKey]] = accumulator[curObj[byKey]] || []).push(curObj)
+        return accumulator
     }, {})
 }

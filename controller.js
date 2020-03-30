@@ -26,7 +26,7 @@ exports.index = function (req, res) {
     response.info("Pantau COVID-19 is in the house!", res)
 }
 
-const getDistanceInKm = function ({ checkPoint, centerPoint }) {
+const getDistanceInMeter = function ({ checkPoint, centerPoint }) {
 
     let ky = 40000 / 360 * 1000
     let kx = Math.cos(Math.PI * centerPoint.lat / 180.0) * ky
@@ -38,10 +38,10 @@ const getDistanceInKm = function ({ checkPoint, centerPoint }) {
 
 var groupBy = function (arrayObj, byKey) {
     return arrayObj.reduce(function (total, curObj) {
-        (total[curObj[byKey]] = total[curObj[byKey]] || []).push(curObj);
-        return total;
-    }, {});
-};
+        (total[curObj[byKey]] = total[curObj[byKey]] || []).push(curObj)
+        return total
+    }, {})
+}
 
 exports.peopleAround = async function (req, res) {
 
@@ -72,7 +72,7 @@ exports.peopleAround = async function (req, res) {
 
     trackingArr = trackingArr.map(tracking => {
         //add distance
-        tracking.distance = getDistanceInKm({
+        tracking.distance = getDistanceInMeter({
             checkPoint: {
                 lat: tracking.Latitute,
                 lon: tracking.Longitute
@@ -111,9 +111,9 @@ exports.peopleAround = async function (req, res) {
         return byDistance && byTimespan && byUserId
     })
 
-    // console.log(groupBy(trackingArr, 'idUser'));
+    // console.log(groupBy(trackingArr, 'idUser'))
 
-    trackingArr = groupBy(trackingArr, 'idUser');
+    trackingArr = groupBy(trackingArr, 'idUser')
 
     // console.log(trackingArr)
 
@@ -125,8 +125,9 @@ exports.peopleAround = async function (req, res) {
 
 }
 
-exports.isMoving = async function (req, res) {
-    const { userId, time } = req.body
+exports.stopoverHistory = async function (req, res) {
+
+    const { userId, dataFromTime, placeRadius } = req.body
     const db = firebase.database()
     const ref = db.ref("Tracking")
 
@@ -142,42 +143,110 @@ exports.isMoving = async function (req, res) {
 
     trackingList = JSON.parse(JSON.stringify(trackingList))
 
+    let dataFromTimeMoment = moment(dataFromTime, "YYYY-MM-DDTHH:mm")
+    console.log("dataFromTimeMoment", dataFromTimeMoment.toDate())
+
     let trackingArr = []
     await Object.keys(trackingList).forEach(function (key, idx) {
         trackingList[key].key = key
         trackingArr.push(trackingList[key])
     })
 
-    trackingArr = trackingArr.reverse()
-
+    //filter by userId
     trackingArr = trackingArr.filter(tracking => {
         let byUserId = true
+        let byDataFromTime = true
 
         //filter by userId
         if (userId != null)
             byUserId = tracking.idUser == userId
 
-        return byUserId
+        //filter by dataFromTime
+        if (dataFromTime != null) {
+            let checkingTime = moment(tracking.Tanggal, "MMM DD, YYYY hh.mm.ss a")
+            let isafter = checkingTime.isAfter(dataFromTimeMoment)
+            byDataFromTime = isafter
+        }
+
+        return byUserId && byDataFromTime
     })
 
-    let positionStatus = "static";
-    if (trackingArr[0].Latitute != trackingArr[1].Latitute ||
-        trackingArr[0].Longitute != trackingArr[1].Longitute) {
-        positionStatus = "moving";
+    // grouping by place chronologically
+    let trackingArrPos = []
+    let centerTracking = {}
+    for (let i = 0; i < trackingArr.length; i++) {
+        let pos = {}
+        let currentTracking = trackingArr[i]
+
+        if (i == 0) {
+            centerTracking = trackingArr[i]
+            pos = {
+                centerLat: currentTracking.Latitute,
+                centerLon: currentTracking.Longitute,
+                fromTime: moment(currentTracking.Tanggal, "MMM DD, YYYY hh.mm.ss a").toDate(),
+                toTime: moment(currentTracking.Tanggal, "MMM DD, YYYY hh.mm.ss a").toDate(),
+            }
+
+            trackingArrPos.push(pos)
+
+        } else {
+            let lastTracking = trackingArr[i - 1]
+
+            let posDistance = getDistanceInMeter({
+                checkPoint: {
+                    lat: currentTracking.Latitute,
+                    lon: currentTracking.Longitute
+                }, centerPoint: {
+                    lat: centerTracking.Latitute,
+                    lon: centerTracking.Longitute
+                }
+            })
+
+            if (posDistance > (placeRadius || 20)) {
+                centerTracking = currentTracking
+
+                pos = {
+                    centerLat: centerTracking.Latitute,
+                    centerLon: centerTracking.Longitute,
+                    fromTime: moment(centerTracking.Tanggal, "MMM DD, YYYY hh.mm.ss a").toDate(),
+                    toTime: moment(centerTracking.Tanggal, "MMM DD, YYYY hh.mm.ss a").toDate(),
+                }
+
+                trackingArrPos.push(pos)
+            } else {
+                let currentTrackingTanggal = moment(currentTracking.Tanggal, "MMM DD, YYYY hh.mm.ss a")
+                pos = {
+                    centerLat: centerTracking.Latitute,
+                    centerLon: centerTracking.Longitute,
+                    fromTime: moment(centerTracking.Tanggal, "MMM DD, YYYY hh.mm.ss a").toDate(),
+                    toTime: moment(currentTracking.Tanggal, "MMM DD, YYYY hh.mm.ss a").toDate(),
+                }
+
+                trackingArrPos[trackingArrPos.length - 1] = pos
+            }
+
+        }
     }
 
-    let returnData = {
-        positionStatus: positionStatus
-    }
-
-    let centerTime = moment(time, "YYYY-MM-DDTHH:mm")
-
-    console.log(trackingArr)
+    console.log(trackingArrPos)
 
     let returnRes = {
         body: req.body,
-        snapshot: returnData,
+        snapshot: trackingArr,
     }
     response.info(returnRes, res)
 
+}
+
+var groupByA = function (arrayObj, byKey) {
+    return arrayObj.reduce(function (total, curObj) {
+        // let a = []
+        // if (total[curObj[byKey]] != null) {
+        //     a = total[curObj[byKey]]
+        // }
+        // a.push(curObj)
+
+        (total[curObj[byKey]] = total[curObj[byKey]] || []).push(curObj)
+        return total
+    }, {})
 }

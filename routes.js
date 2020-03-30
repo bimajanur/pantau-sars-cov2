@@ -16,7 +16,7 @@ module.exports = function (app) {
     app.route('/people-around-me')
         .post(pantauAPI.peopleAround);
 
-    app.route('/is-moving')
-        .post(pantauAPI.isMoving);
+    app.route('/stopover-history')
+        .post(pantauAPI.stopoverHistory);
 
 };

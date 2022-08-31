@@ -21,7 +21,7 @@
     "firebase": "^7.13.0",
     "firebase-admin": "^8.10.0",
     "moment": "^2.24.0",
-    "moment-timezone": "^0.5.28",
+    "moment-timezone": "^0.5.35",
     "nodemon": "^2.0.2"
   }
 }
